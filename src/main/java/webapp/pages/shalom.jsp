@@ -11,6 +11,9 @@
     <title>Shalom</title>
 </head>
 <body>
-    shalom
+Hello ${name}
+<sec:authorize access="isAuthenticated()">
+    pussy
+</sec:authorize>
 </body>
 </html>

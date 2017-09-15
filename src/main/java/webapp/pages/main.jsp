@@ -1,3 +1,4 @@
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,6 +9,16 @@
     <title>Document</title>
 </head>
 <body>
-    hello
+    <form action="/fb/login" method="POST">
+        <input type="submit">
+        <input type="hidden"
+               name="${_csrf.parameterName}" value="${_csrf.token}">
+    </form>
+    <p>
+        ${principal}
+    </p>
+    <sec:authorize access="isAuthenticated()">
+        pussy
+    </sec:authorize>
 </body>
 </html>

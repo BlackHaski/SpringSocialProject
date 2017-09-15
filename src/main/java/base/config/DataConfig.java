@@ -1,37 +1,62 @@
 package base.config;
 
-import com.mongodb.MongoClient;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.JpaVendorAdapter;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.Database;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
+import java.util.Properties;
 
 @Configuration
-@PropertySource("classpath:config.properties")
-public class DataConfig{
-    @Autowired
-    Environment env;
+@EnableJpaRepositories("base.dao")
+@EnableTransactionManagement
+public class DataConfig {
+    @Bean
+    public DataSource dataSource(){
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setDriverClassName("com.mysql.jdbc.Driver");
+        hikariConfig.setJdbcUrl("jdbc:mysql://localhost:3306/social");
+        hikariConfig.setUsername("root");
+        hikariConfig.setPassword("root");
 
-    @Bean
-    public MongoClient mongo(){
-        MongoClient mongo = new MongoClient();
-        return mongo;
+        hikariConfig.addDataSourceProperty("dataSource.cachePrepStmts", "true");
+        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSize", "250");
+        hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSqlLimit", "2048");
+        hikariConfig.addDataSourceProperty("dataSource.useServerPrepStmts", "true");
+
+        HikariDataSource dataSource = new HikariDataSource(hikariConfig);
+        return dataSource;
     }
     @Bean
-    public Morphia morphia(){
-        Morphia morphia = new Morphia();
-        morphia.createDatastore(mongo(), env.getProperty("db.name"));
-        morphia.mapPackage("/entity/");
-        return morphia;
+    public JpaVendorAdapter vendorAdapter(){
+        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        vendorAdapter.setShowSql(true);
+        vendorAdapter.setDatabase(Database.MYSQL);
+        return vendorAdapter;
     }
     @Bean
-    public Datastore datastore(){
-        Datastore datastore = morphia().createDatastore(mongo(), env.getProperty("db.name"));
-        return datastore;
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(){
+        LocalContainerEntityManagerFactoryBean factoryBean = new LocalContainerEntityManagerFactoryBean();
+        factoryBean.setJpaVendorAdapter(vendorAdapter());
+        factoryBean.setDataSource(dataSource());
+        factoryBean.setPackagesToScan("base.entity");
+        Properties properties = new Properties();
+        properties.put("hibernate.hbm2ddl.auto", "update");
+        factoryBean.setJpaProperties(properties);
+        return factoryBean;
     }
+    @Bean
+    public JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory){
+        return new JpaTransactionManager(entityManagerFactory);
+    }
+
 }
