@@ -1,3 +1,4 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%--
   Created by IntelliJ IDEA.
   User: BlackDoggy
@@ -11,9 +12,8 @@
     <title>Shalom</title>
 </head>
 <body>
-Hello ${name}
-<sec:authorize access="isAuthenticated()">
-    pussy
-</sec:authorize>
+    <c:forEach var="image" items="${images}">
+        <img src="${image}" height="200px" width="200px"> <br>
+    </c:forEach>
 </body>
 </html>
